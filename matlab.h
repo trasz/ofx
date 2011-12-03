@@ -3,9 +3,12 @@
 
 #include <sys/queue.h>
 
+struct packet;
+
 struct matlab {
 	TAILQ_ENTRY(matlab)	matlab_next;
 	int			matlab_fd;
+	struct packet		*matlab_p;
 };
 
 void	matlab_handle(struct matlab *matlab, int fd);

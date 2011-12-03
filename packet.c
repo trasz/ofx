@@ -33,10 +33,10 @@ p_free(struct packet *p)
 	free(p);
 }
 
-unsigned char *
+char *
 p_extend(struct packet *p, size_t diff)
 {
-	unsigned char *buf;
+	char *buf;
 
 	if (p->p_payload_len + diff >= p->p_allocated_len) {
 		p->p_allocated_len *= 4;
@@ -53,10 +53,10 @@ p_extend(struct packet *p, size_t diff)
 	return (buf);
 }
 
-unsigned char *
+char *
 p_read(struct packet *p, int fd, size_t len)
 {
-	unsigned char *buf;
+	char *buf;
 	ssize_t received;
 	size_t done = 0;
 
@@ -82,10 +82,10 @@ p_read(struct packet *p, int fd, size_t len)
 	return (buf);
 }
 
-unsigned char *
+char *
 p_peek(struct packet *p, int fd, size_t len)
 {
-	unsigned char *buf;
+	char *buf;
 	ssize_t received;
 
 	/*
