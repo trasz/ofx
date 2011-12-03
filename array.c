@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,8 +51,6 @@ a_free(struct array *a)
 static void
 a_extend(struct array *a)
 {
-	unsigned char *buf;
-	size_t len;
 
 	a->a_count++;
 
@@ -105,7 +104,6 @@ a_add_double(struct array *a, double x)
 void
 a_add_string(struct array *a, const char *s)
 {
-	char **v;
 
 	assert(a->a_type == A_TYPE_STRING || a->a_type == A_TYPE_NONE);
 	a->a_type = A_TYPE_STRING;
@@ -129,7 +127,7 @@ a_str(FILE *fp, struct array *a)
 			fprintf(fp, "%d", a->a_values.av_ints[i]);
 			break;
 		case A_TYPE_DOUBLE:
-			fprintf(fp, "%d", a->a_values.av_doubles[i]);
+			fprintf(fp, "%f", a->a_values.av_doubles[i]);
 			break;
 		case A_TYPE_STRING:
 			fprintf(fp, "\"%s\"", a->a_values.av_strings[i]);
