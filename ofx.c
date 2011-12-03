@@ -10,6 +10,7 @@
 
 #include "debug.h"
 #include "ofproto.h"
+#include "ofport.h"
 #include "ofswitch.h"
 #include "matlab.h"
 
@@ -96,6 +97,13 @@ ofs_find(int fd)
 	}
 
 	return (NULL);
+}
+
+void
+ofs_add_port(struct ofswitch *ofs, struct ofport *ofp)
+{
+
+	TAILQ_INSERT_TAIL(&ofs->ofs_ports, ofp, ofp_next);
 }
 
 static int

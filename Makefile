@@ -4,8 +4,8 @@ default:	all
 
 all:		ofx
 
-ofx:		ofx.o packet.o array.o ofproto.o matlab.o monitoring.o
-	$(CC) -o ofx ofx.o packet.o array.o ofproto.o matlab.o monitoring.o
+ofx:		ofx.o packet.o array.o ofproto.o matlab.o monitoring.o ofport.o
+	$(CC) -o ofx ofx.o packet.o array.o ofproto.o matlab.o monitoring.o ofport.o
 
 clean:
 	rm -f ofx *.o *.core
