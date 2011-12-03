@@ -1,9 +1,8 @@
 #ifndef OFPROTO_H
 #define	OFPROTO_H
 
-#include <stdbool.h>
+struct ofswitch;
 
-void	ofproto_new_switch(int switch_fd, int controller_fd);
-bool	ofproto_handle(int fd);
+void	ofproto_handle(struct ofswitch *ofs, int fd);
 
 #endif /* !OFPROTO_H */
