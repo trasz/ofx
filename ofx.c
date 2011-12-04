@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <assert.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,7 +104,47 @@ void
 ofs_add_port(struct ofswitch *ofs, struct ofport *ofp)
 {
 
+	assert(ofp->ofp_switch == NULL);
+	ofp->ofp_switch = ofs;
 	TAILQ_INSERT_TAIL(&ofs->ofs_ports, ofp, ofp_next);
+}
+
+void
+ofs_delete_port(struct ofswitch *ofs, struct ofport *ofp)
+{
+	struct ofport *tmp;
+
+	tmp = ofs_find_port(ofs, ofp->ofp_number);
+	TAILQ_REMOVE(&ofs->ofs_ports, tmp, ofp_next);
+	ofp_free(tmp);
+}
+
+void
+ofs_modify_port(struct ofswitch *ofs, struct ofport *ofp)
+{
+	struct ofport *tmp;
+
+	tmp = ofs_find_port(ofs, ofp->ofp_number);
+
+	tmp->ofp_config = ofp->ofp_config;
+	tmp->ofp_state = ofp->ofp_state;
+	tmp->ofp_curr = ofp->ofp_curr;
+	tmp->ofp_advertised = ofp->ofp_advertised;
+	tmp->ofp_supported = ofp->ofp_supported;
+	tmp->ofp_peer = ofp->ofp_peer;
+}
+
+struct ofport *
+ofs_find_port(struct ofswitch *ofs, int port)
+{
+	struct ofport *tmp;
+
+	TAILQ_FOREACH(tmp, &ofs->ofs_ports, ofp_next) {
+		assert(tmp->ofp_switch == ofs);
+		if (tmp->ofp_number == port)
+			return (tmp);
+	}
+	errx(1, "ofs_delete_port: port not found");
 }
 
 static int

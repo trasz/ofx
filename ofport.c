@@ -15,3 +15,9 @@ ofp_alloc(void)
 	return (ofp);
 }
 
+void
+ofp_free(struct ofport *ofp)
+{
+
+	free(ofp);
+}

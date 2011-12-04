@@ -4,10 +4,28 @@
 
 #include "debug.h"
 #include "monitoring.h"
-#include "ofswitch.h"
 #include "ofport.h"
+#include "ofswitch.h"
 #include "openflow.h"
 #include "packet.h"
+
+static struct ofport *
+monitoring_parse_ofp_phy_port(const struct ofp_phy_port *ofppp)
+{
+	struct ofport *ofp;
+
+	ofp = ofp_alloc();
+	ofp->ofp_number = ntohs(ofppp->port_no);
+	ofp->ofp_name = strndup(ofppp->name, OFP_MAX_PORT_NAME_LEN);
+	ofp->ofp_config = ntohl(ofppp->config);
+	ofp->ofp_state = ntohl(ofppp->state);
+	ofp->ofp_curr = ntohl(ofppp->curr);
+	ofp->ofp_advertised = ntohl(ofppp->advertised);
+	ofp->ofp_supported = ntohl(ofppp->supported);
+	ofp->ofp_peer = ntohl(ofppp->peer);
+
+	return (ofp);
+}
 
 void
 monitoring_handle_features_reply(struct ofswitch *ofs, const struct packet *p)
@@ -31,15 +49,7 @@ monitoring_handle_features_reply(struct ofswitch *ofs, const struct packet *p)
 
 	for (i = 0; i < nports; i++) {
 		ofppp = (const struct ofp_phy_port *)&(ofpsf->ports[i]);
-		ofp = ofp_alloc();
-		ofp->ofp_number = ntohs(ofppp->port_no);
-		ofp->ofp_name = strndup(ofppp->name, OFP_MAX_PORT_NAME_LEN);
-		ofp->ofp_config = ntohl(ofppp->config);
-		ofp->ofp_state = ntohl(ofppp->state);
-		ofp->ofp_curr = ntohl(ofppp->curr);
-		ofp->ofp_advertised = ntohl(ofppp->advertised);
-		ofp->ofp_supported = ntohl(ofppp->supported);
-		ofp->ofp_peer = ntohl(ofppp->peer);
+		ofp = monitoring_parse_ofp_phy_port(ofppp);
 		ofs_add_port(ofs, ofp);
 	}
 }
@@ -48,19 +58,26 @@ void
 monitoring_handle_port_status(struct ofswitch *ofs, const struct packet *p)
 {
 	const struct ofp_port_status *ofpps;
+	struct ofport *ofp;
 
 	if (p->p_payload_len != sizeof(*ofpps))
 		errx(1, "invalid PORT_STATUS message size: got %zd, should be %ld", p->p_payload_len, sizeof(*ofpps));
 
 	ofpps = (const struct ofp_port_status *)p->p_payload;
+	ofp = monitoring_parse_ofp_phy_port(&(ofpps->desc));
 	switch (ofpps->reason) {
 	case OFPPR_ADD:
 		debug("switch %d: port added\n", ofs->ofs_number);
+		ofs_add_port(ofs, ofp);
 		break;
 	case OFPPR_DELETE:
 		debug("switch %d: port deleted\n", ofs->ofs_number);
+		ofs_delete_port(ofs, ofp);
+		break;
 	case OFPPR_MODIFY:
 		debug("switch %d: port changed\n", ofs->ofs_number);
+		ofs_modify_port(ofs, ofp);
+		break;
 	default:
 		errx(1, "invalid port status reason %d", ofpps->reason);
 	}

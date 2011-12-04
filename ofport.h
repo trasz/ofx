@@ -6,6 +6,7 @@
 
 struct ofport {
 	TAILQ_ENTRY(ofport)	ofp_next;
+	struct ofswitch		*ofp_switch;
 	int			ofp_number;
 	char			*ofp_name;
 	uint32_t		ofp_config;
@@ -17,5 +18,6 @@ struct ofport {
 };
 
 struct ofport	*ofp_alloc(void);
+void		ofp_free(struct ofport *ofp);
 
 #endif /* !OFPORT_H */

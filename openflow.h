@@ -441,7 +441,7 @@ struct ofp_packet_out {
     uint16_t in_port;             /* Packet's input port (OFPP_NONE if none). */
     uint16_t actions_len;         /* Size of action array in bytes. */
     struct ofp_action_header actions[0]; /* Actions. */
-    /* uint8_t data[0]; */        /* Packet data.  The length is inferred
+    uint8_t data[0];              /* Packet data.  The length is inferred
                                      from the length field in the header.
                                      (Only meaningful if buffer_id == -1.) */
 };
