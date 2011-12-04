@@ -6,6 +6,7 @@
 #include "ofswitch.h"
 
 struct ofswitches ofswitches;
+static int ofswitch_last_number;
 
 void
 ofs_add(int switch_fd, int controller_fd)
@@ -18,6 +19,8 @@ ofs_add(int switch_fd, int controller_fd)
 
 	ofs->ofs_switch_fd = switch_fd;
 	ofs->ofs_controller_fd = controller_fd;
+	ofs->ofs_number = ofswitch_last_number;
+	ofswitch_last_number++;
 
 	TAILQ_INSERT_TAIL(&ofswitches, ofs, ofs_next);
 }

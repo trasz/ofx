@@ -4,10 +4,13 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <unistd.h>
 
+#include "array.h"
 #include "matlab.h"
+#include "ofswitch.h"
 #include "packet.h"
 
 struct matlabs matlabs;
@@ -39,9 +42,20 @@ matlab_find(int fd)
 	return (NULL);
 }
 
-
 static void matlab_switches(struct matlab *matlab, const char *args)
 {
+	struct array *a;
+	struct ofswitch *ofs;
+	char *str;
+
+	a = a_alloc();
+	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
+		a_add_int(a, ofs->ofs_number);
+	}
+	str = a_str(a);
+	a_free(a);
+
+	write(matlab->matlab_fd, str, strlen(str));
 }
 
 static void matlab_topology(struct matlab *matlab, const char *args)
@@ -64,15 +78,14 @@ static void matlab_help(struct matlab *matlab, const char *args)
 {
 	const char msg[] = "Available commands: switches, topology, status, stats, poll, help.\n";
 
-	write(matlab->matlab_fd, msg, sizeof(msg));
-
+	write(matlab->matlab_fd, msg, strlen(msg));
 }
 
 static void matlab_unrecognized(struct matlab *matlab, const char *args)
 {
 	const char msg[] = "Unrecognized command; try 'help'.\n";
 
-	write(matlab->matlab_fd, msg, sizeof(msg));
+	write(matlab->matlab_fd, msg, strlen(msg));
 }
 
 struct matlab_cmd {

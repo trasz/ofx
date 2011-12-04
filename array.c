@@ -114,32 +114,42 @@ a_add_string(struct array *a, const char *s)
 		err(1, "malloc");
 }
 
-void
-a_str(FILE *fp, struct array *a)
+char *
+a_str(struct array *a)
 {
 	int i;
+	char *str, *str2;
 
-	fprintf(fp, "[");
+	str = strdup("[");
 
 	for (i = 0; i < a->a_count; i++) {
 		switch (a->a_type) {
 		case A_TYPE_INT:
-			fprintf(fp, "%d", a->a_values.av_ints[i]);
+			asprintf(&str2, "%s%d", str, a->a_values.av_ints[i]);
+			free(str);
 			break;
 		case A_TYPE_DOUBLE:
-			fprintf(fp, "%f", a->a_values.av_doubles[i]);
+			asprintf(&str2, "%s%f", str, a->a_values.av_doubles[i]);
+			free(str);
 			break;
 		case A_TYPE_STRING:
-			fprintf(fp, "\"%s\"", a->a_values.av_strings[i]);
+			asprintf(&str2, "%s\"%s\"", str, a->a_values.av_strings[i]);
+			free(str);
 			break;
 		default:
 			assert(!"invalid array type");
 		}
 
-		if (i < a->a_count - 1)
-			fprintf(fp, ", ");
+		if (i < a->a_count - 1) {
+			asprintf(&str, "%s, ", str2);
+			free(str2);
+		} else
+			str = str2;
 	}
 
-	fprintf(fp, "]\n");
+	asprintf(&str2, "%s]\n", str);
+	free(str);
+
+	return(str2);
 }
 
