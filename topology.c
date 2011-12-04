@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "debug.h"
+#include "oflink.h"
 #include "ofport.h"
 #include "ofswitch.h"
 #include "openflow.h"
@@ -38,6 +39,7 @@ topology_handle_packet_in(struct ofswitch *ofs, const struct packet *p)
 	const struct ofp_packet_in *ofppi;
 	struct topology_packet *tp;
 	int frame_len, compare_len;
+	struct ofport *ofp;
 
 	if (p->p_payload_len < sizeof(*ofppi))
 		errx(1, "invalid PACKET_IN message size: got %zd, should be at least %ld", p->p_payload_len, sizeof(*ofppi));
@@ -54,6 +56,11 @@ topology_handle_packet_in(struct ofswitch *ofs, const struct packet *p)
 
 		debug("topology_handle_packet_in: got link from switch %d port %d to switch %d port %d\n",
 		    tp->tp_port->ofp_switch->ofs_number, tp->tp_port->ofp_number, ofs->ofs_number, ntohs(ofppi->in_port));
+
+		ofp = ofp_find_by_number(ofs, ofppi->in_port);
+		if (ofp == NULL)
+			errx(1, "port not found");
+		ofl_link(ofp, tp->tp_port);
 	}
 }
 

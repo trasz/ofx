@@ -6,9 +6,14 @@
 
 #include "openflow.h"
 
+struct ofswitch;
+struct oflink;
+
 struct ofport {
 	TAILQ_ENTRY(ofport)	ofp_next;
 	struct ofswitch		*ofp_switch;
+	struct oflink		*ofp_link;
+	TAILQ_ENTRY(ofport)	ofp_next_link;
 	int			ofp_number;
 	uint8_t			ofp_hw_addr[OFP_ETH_ALEN];
 	char			*ofp_name;

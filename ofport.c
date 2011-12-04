@@ -2,6 +2,7 @@
 #include <err.h>
 #include <stdlib.h>
 
+#include "oflink.h"
 #include "ofport.h"
 #include "ofswitch.h"
 
@@ -20,7 +21,8 @@ ofp_alloc(void)
 void
 ofp_free(struct ofport *ofp)
 {
-
+	ofl_unlink(ofp);
+	free(ofp->ofp_name);
 	free(ofp);
 }
 

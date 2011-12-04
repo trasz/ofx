@@ -11,6 +11,7 @@
 #include "array.h"
 #include "control.h"
 #include "matlab.h"
+#include "oflink.h"
 #include "ofport.h"
 #include "ofswitch.h"
 #include "packet.h"
@@ -32,7 +33,7 @@ matlab_add(int matlab_fd)
 }
 
 struct matlab *
-matlab_find(int fd)
+matlab_find_by_fd(int fd)
 {
 	struct matlab *matlab;
 
@@ -69,10 +70,46 @@ static void matlab_switches(struct matlab *matlab, const char *args)
 
 static void matlab_topology(struct matlab *matlab, const char *args)
 {
+	struct ofswitch *ofs;
+	struct ofport *ofp, *ofp2;
+	struct array *a;
+
+	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
+		TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next) {
+			TAILQ_FOREACH(ofp2, &ofp->ofp_link->ofl_ports, ofp_next_link) {
+				a = a_alloc();
+				a_add_int(a, ofs->ofs_number);
+				a_add_int(a, ofp->ofp_number);
+				a_add_int(a, ofp2->ofp_switch->ofs_number);
+				a_add_int(a, ofp2->ofp_number);
+				matlab_print(matlab, a_str(a));
+				a_free(a);
+			}
+		}
+	}
 }
 
 static void matlab_status(struct matlab *matlab, const char *args)
 {
+	struct ofswitch *ofs;
+	struct ofport *ofp;
+	struct array *a;
+
+	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
+		TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next) {
+			a = a_alloc();
+			a_add_int(a, ofs->ofs_number);
+			a_add_int(a, ofp->ofp_number);
+			a_add_int(a, ofp->ofp_config);
+			a_add_int(a, ofp->ofp_state);
+			a_add_int(a, ofp->ofp_curr);
+			a_add_int(a, ofp->ofp_advertised);
+			a_add_int(a, ofp->ofp_supported);
+			a_add_int(a, ofp->ofp_peer);
+			matlab_print(matlab, a_str(a));
+			a_free(a);
+		}
+	}
 }
 
 static void matlab_stats(struct matlab *matlab, const char *args)

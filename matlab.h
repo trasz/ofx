@@ -12,7 +12,7 @@ struct matlab {
 };
 
 void	matlab_add(int matlab_fd);
-struct matlab	*matlab_find(int fd);
+struct matlab	*matlab_find_by_fd(int fd);
 void	matlab_handle(struct matlab *matlab, int fd);
 
 TAILQ_HEAD(matlabs, matlab);

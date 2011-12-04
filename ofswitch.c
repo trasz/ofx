@@ -25,19 +25,6 @@ ofs_add(int switch_fd, int controller_fd)
 	TAILQ_INSERT_TAIL(&ofswitches, ofs, ofs_next);
 }
 
-struct ofswitch *
-ofs_find(int fd)
-{
-	struct ofswitch *ofs;
-
-	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
-		if (fd == ofs->ofs_switch_fd || fd == ofs->ofs_controller_fd)
-			return (ofs);
-	}
-
-	return (NULL);
-}
-
 void
 ofs_add_port(struct ofswitch *ofs, struct ofport *ofp)
 {
@@ -79,6 +66,19 @@ ofs_find_by_number(int number)
 
 	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
 		if (ofs->ofs_number == number)
+			return (ofs);
+	}
+
+	return (NULL);
+}
+
+struct ofswitch *
+ofs_find_by_fd(int fd)
+{
+	struct ofswitch *ofs;
+
+	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
+		if (fd == ofs->ofs_switch_fd || fd == ofs->ofs_controller_fd)
 			return (ofs);
 	}
 

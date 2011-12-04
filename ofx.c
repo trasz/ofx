@@ -155,13 +155,13 @@ main(int argc, char **argv)
 			if (!FD_ISSET(i, &fdset))
 				continue;
 
-			ofs = ofs_find(i);
+			ofs = ofs_find_by_fd(i);
 			if (ofs != NULL) {
 				ofproto_handle(ofs, i);
 				continue;
 			}
 
-			matlab = matlab_find(i);
+			matlab = matlab_find_by_fd(i);
 			if (matlab != NULL) {
 				matlab_handle(matlab, i);
 				continue;
