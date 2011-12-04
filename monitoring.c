@@ -87,6 +87,18 @@ monitoring_handle_port_status(struct ofswitch *ofs, const struct packet *p)
 void
 monitoring_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
 {
+	const struct ofp_port_mod *ofppm;
+	struct ofport *ofp;
+
+	if (p->p_payload_len != sizeof(*ofppm))
+		errx(1, "invalid PORT_MOD message size: got %zd, should be %ld", p->p_payload_len, sizeof(*ofppm));
+
+	ofp = ofp_find_by_number(ofs, ntohs(ofppm->port_no));
+	if (ofp == NULL)
+		errx(1, "port not found");
+	ofp->ofp_config &= ~(ntohl(ofppm->mask));
+	ofp->ofp_config |= ntohl(ofppm->config);
+	ofp->ofp_advertised = ntohl(ofppm->advertise);
 }
 
 void
