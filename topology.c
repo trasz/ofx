@@ -75,7 +75,7 @@ topology_handle_packet_out(struct ofswitch *ofs, const struct packet *p)
 	p_extend(tp->tp_p, frame_len);
 	memcpy(tp->tp_p->p_payload, ofppo->data, frame_len);
 
-	tp->tp_port = ofs_find_port(ofs, ntohs(ofppo->in_port));
+	tp->tp_port = ofp_find_by_number(ofs, ntohs(ofppo->in_port));
 
 	TAILQ_INSERT_TAIL(&topology_packets, tp, tp_next);
 

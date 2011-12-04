@@ -4,10 +4,13 @@
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include "openflow.h"
+
 struct ofport {
 	TAILQ_ENTRY(ofport)	ofp_next;
 	struct ofswitch		*ofp_switch;
 	int			ofp_number;
+	uint8_t			ofp_hw_addr[OFP_ETH_ALEN];
 	char			*ofp_name;
 	uint32_t		ofp_config;
 	uint32_t		ofp_state;
@@ -19,5 +22,6 @@ struct ofport {
 
 struct ofport	*ofp_alloc(void);
 void		ofp_free(struct ofport *ofp);
+struct ofport	*ofp_find_by_number(struct ofswitch *ofs, int number);
 
 #endif /* !OFPORT_H */

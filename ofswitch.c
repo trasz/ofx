@@ -52,7 +52,7 @@ ofs_delete_port(struct ofswitch *ofs, struct ofport *ofp)
 {
 	struct ofport *tmp;
 
-	tmp = ofs_find_port(ofs, ofp->ofp_number);
+	tmp = ofp_find_by_number(ofs, ofp->ofp_number);
 	TAILQ_REMOVE(&ofs->ofs_ports, tmp, ofp_next);
 	ofp_free(tmp);
 }
@@ -62,7 +62,7 @@ ofs_modify_port(struct ofswitch *ofs, struct ofport *ofp)
 {
 	struct ofport *tmp;
 
-	tmp = ofs_find_port(ofs, ofp->ofp_number);
+	tmp = ofp_find_by_number(ofs, ofp->ofp_number);
 
 	tmp->ofp_config = ofp->ofp_config;
 	tmp->ofp_state = ofp->ofp_state;
@@ -72,16 +72,16 @@ ofs_modify_port(struct ofswitch *ofs, struct ofport *ofp)
 	tmp->ofp_peer = ofp->ofp_peer;
 }
 
-struct ofport *
-ofs_find_port(struct ofswitch *ofs, int port)
+struct ofswitch	*
+ofs_find_by_number(int number)
 {
-	struct ofport *tmp;
+	struct ofswitch *ofs;
 
-	TAILQ_FOREACH(tmp, &ofs->ofs_ports, ofp_next) {
-		assert(tmp->ofp_switch == ofs);
-		if (tmp->ofp_number == port)
-			return (tmp);
+	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
+		if (ofs->ofs_number == number)
+			return (ofs);
 	}
-	errx(1, "ofs_delete_port: port not found");
+
+	return (NULL);
 }
 

@@ -16,6 +16,7 @@ monitoring_parse_ofp_phy_port(const struct ofp_phy_port *ofppp)
 
 	ofp = ofp_alloc();
 	ofp->ofp_number = ntohs(ofppp->port_no);
+	memcpy(ofp->ofp_hw_addr, ofppp->hw_addr, sizeof(ofp->ofp_hw_addr));
 	ofp->ofp_name = strndup(ofppp->name, OFP_MAX_PORT_NAME_LEN);
 	ofp->ofp_config = ntohl(ofppp->config);
 	ofp->ofp_state = ntohl(ofppp->state);

@@ -20,7 +20,7 @@ struct ofswitch	*ofs_find(int fd);
 void	ofs_add_port(struct ofswitch *ofs, struct ofport *ofp);
 void	ofs_delete_port(struct ofswitch *ofs, struct ofport *ofp);
 void	ofs_modify_port(struct ofswitch *ofs, struct ofport *ofp);
-struct ofport	*ofs_find_port(struct ofswitch *ofs, int port);
+struct ofswitch	*ofs_find_by_number(int number);
 
 TAILQ_HEAD(ofswitches, ofswitch);
 extern struct ofswitches ofswitches;

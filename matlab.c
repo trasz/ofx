@@ -9,7 +9,9 @@
 #include <unistd.h>
 
 #include "array.h"
+#include "control.h"
 #include "matlab.h"
+#include "ofport.h"
 #include "ofswitch.h"
 #include "packet.h"
 
@@ -42,6 +44,13 @@ matlab_find(int fd)
 	return (NULL);
 }
 
+static void
+matlab_print(struct matlab *matlab, const char *str)
+{
+
+	write(matlab->matlab_fd, str, strlen(str));
+}
+
 static void matlab_switches(struct matlab *matlab, const char *args)
 {
 	struct array *a;
@@ -54,8 +63,8 @@ static void matlab_switches(struct matlab *matlab, const char *args)
 	}
 	str = a_str(a);
 	a_free(a);
-
-	write(matlab->matlab_fd, str, strlen(str));
+	matlab_print(matlab, str);
+	free(str);
 }
 
 static void matlab_topology(struct matlab *matlab, const char *args)
@@ -70,22 +79,62 @@ static void matlab_stats(struct matlab *matlab, const char *args)
 {
 }
 
+static void matlab_port_up(struct matlab *matlab, const char *args)
+{
+	int switch_no, port_no;
+	struct ofswitch *ofs;
+	struct ofport *ofp;
+
+	switch_no = port_no = 0;
+
+	ofs = ofs_find_by_number(switch_no);
+	if (ofs == NULL) {
+		matlab_print(matlab, "Invalid switch number.\n");
+		return;
+	}
+	ofp = ofp_find_by_number(ofs, port_no);
+	if (ofp == NULL) {
+		matlab_print(matlab, "Invalid port number.\n");
+		return;
+	}
+	control_port_up(ofp);
+}
+
+static void matlab_port_down(struct matlab *matlab, const char *args)
+{
+	int switch_no, port_no;
+	struct ofswitch *ofs;
+	struct ofport *ofp;
+
+	switch_no = port_no = 0;
+
+	ofs = ofs_find_by_number(switch_no);
+	if (ofs == NULL) {
+		matlab_print(matlab, "Invalid switch number.\n");
+		return;
+	}
+	ofp = ofp_find_by_number(ofs, port_no);
+	if (ofp == NULL) {
+		matlab_print(matlab, "Invalid port number.\n");
+		return;
+	}
+	control_port_down(ofp);
+}
+
 static void matlab_poll(struct matlab *matlab, const char *args)
 {
 }
 
 static void matlab_help(struct matlab *matlab, const char *args)
 {
-	const char msg[] = "Available commands: switches, topology, status, stats, poll, help.\n";
 
-	write(matlab->matlab_fd, msg, strlen(msg));
+	matlab_print(matlab, "Available commands: switches, topology, status, stats, poll, help.\n");
 }
 
 static void matlab_unrecognized(struct matlab *matlab, const char *args)
 {
-	const char msg[] = "Unrecognized command; try 'help'.\n";
 
-	write(matlab->matlab_fd, msg, strlen(msg));
+	matlab_print(matlab, "Unrecognized command; try 'help'.\n");
 }
 
 struct matlab_cmd {
@@ -98,6 +147,8 @@ static const struct matlab_cmd matlab_cmds[] = {
 	{ "topology", matlab_topology },
 	{ "status", matlab_status },
 	{ "stats", matlab_stats },
+	{ "port-up", matlab_port_up },
+	{ "port-down", matlab_port_down },
 	{ "poll", matlab_poll },
 	{ "help", matlab_help },
 	{ NULL, NULL}};
