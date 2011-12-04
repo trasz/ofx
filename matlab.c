@@ -1,12 +1,44 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <ctype.h>
+#include <err.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
 
 #include "matlab.h"
 #include "packet.h"
+
+struct matlabs matlabs;
+
+void
+matlab_add(int matlab_fd)
+{
+	struct matlab *matlab;
+
+	matlab = calloc(sizeof(*matlab), 1);
+	if (matlab == NULL)
+		err(1, "calloc");
+
+	matlab->matlab_fd = matlab_fd;
+
+	TAILQ_INSERT_TAIL(&matlabs, matlab, matlab_next);
+}
+
+struct matlab *
+matlab_find(int fd)
+{
+	struct matlab *matlab;
+
+	TAILQ_FOREACH(matlab, &matlabs, matlab_next) {
+		if (fd == matlab->matlab_fd)
+			return (matlab);
+	}
+
+	return (NULL);
+}
+
 
 static void matlab_switches(struct matlab *matlab, const char *args)
 {
