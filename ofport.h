@@ -23,6 +23,19 @@ struct ofport {
 	uint32_t		ofp_advertised;
 	uint32_t		ofp_supported;
 	uint32_t		ofp_peer;
+
+	uint64_t		ofp_rx_packets;
+	uint64_t		ofp_tx_packets;
+	uint64_t		ofp_rx_bytes;
+	uint64_t		ofp_tx_bytes;
+	uint64_t		ofp_rx_dropped;
+	uint64_t		ofp_tx_dropped;
+	uint64_t		ofp_rx_errors;
+	uint64_t		ofp_tx_errors;
+	uint64_t		ofp_rx_frame_err;
+	uint64_t		ofp_rx_over_err;
+	uint64_t		ofp_rx_crc_err;
+	uint64_t		ofp_collisions;
 };
 
 struct ofport	*ofp_alloc(void);

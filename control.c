@@ -46,3 +46,26 @@ control_port_down(struct ofport *ofp)
 	control_port_mod(ofp, OFPPC_PORT_DOWN, OFPPC_PORT_DOWN);
 }
 
+void
+control_port_advertise(struct ofport *ofp, uint32_t advertise)
+{
+	struct packet *p;
+	struct ofp_port_mod *ofppm;
+
+	p = p_alloc();
+	ofppm = (struct ofp_port_mod *)p_extend(p, sizeof(*ofppm));
+	ofppm->header.version = OFP_VERSION;
+	ofppm->header.type = OFPT_PORT_MOD;
+	ofppm->header.length = htons(p->p_payload_len);
+	ofppm->header.xid = 0; /* XXX */
+
+	ofppm->port_no = htons(ofp->ofp_number);
+	memcpy(ofppm->hw_addr, ofp->ofp_hw_addr, sizeof(ofp->ofp_hw_addr));
+	ofppm->config = htonl(0);
+	ofppm->mask = htonl(0);
+	ofppm->advertise = htonl(advertise);
+
+	p_write(p, ofp->ofp_switch->ofs_switch_fd);
+	p_free(p);
+}
+

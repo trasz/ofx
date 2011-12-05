@@ -1,3 +1,4 @@
+#include <sys/endian.h>
 #include <netinet/in.h>
 #include <err.h>
 #include <string.h>
@@ -8,6 +9,8 @@
 #include "ofswitch.h"
 #include "openflow.h"
 #include "packet.h"
+
+#define	ntohq(x)	be64toh(x);
 
 static struct ofport *
 monitoring_parse_ofp_phy_port(const struct ofp_phy_port *ofppp)
@@ -101,8 +104,54 @@ monitoring_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
 	ofp->ofp_advertised = ntohl(ofppm->advertise);
 }
 
+/*
+ * Tej struktury z jakiegoś powodu nie ma w specifykacji.
+ */
+struct ofp_port_stats_reply {
+	struct ofp_stats_msg osm;
+	struct ofp_port_stats ports[];
+};
+
 void
 monitoring_handle_stats_reply(struct ofswitch *ofs, const struct packet *p)
 {
+	const struct ofp_port_stats_reply *ofppsr;
+	const struct ofp_port_stats *ofpps;
+	struct ofport *ofp;
+	int i, nports;
+	size_t expected_len;
+
+	if (p->p_payload_len < sizeof(*ofppsr))
+		errx(1, "invalid STATS_REPLY message size: got %zd, should be at least %ld", p->p_payload_len, sizeof(*ofppsr));
+
+	ofppsr  = (const struct ofp_port_stats_reply *)p->p_payload;
+	if (ntohs(ofppsr->osm.type) != OFPST_PORT)
+		return;
+
+	nports = (p->p_payload_len - sizeof(*ofppsr)) / sizeof(struct ofp_port_stats);
+	expected_len = sizeof(*ofppsr) + nports * sizeof(struct ofp_port_stats);
+	if (p->p_payload_len != expected_len)
+		errx(1, "invalid STATS_REPLY message size: got %zd, for %d ports should be %zd", p->p_payload_len, nports, expected_len);
+
+	for (i = 0; i < nports; i++) {
+		ofpps = (const struct ofp_port_stats *)&(ofppsr->ports[i]);
+
+		ofp = ofp_find_by_number(ofs, ntohs(ofpps->port_no));
+		if (ofp == NULL)
+			errx(1, "port not found");
+
+		ofp->ofp_rx_packets = ntohq(ofpps->rx_packets);
+		ofp->ofp_tx_packets = ntohq(ofpps->tx_packets);
+		ofp->ofp_rx_bytes = ntohq(ofpps->rx_bytes);
+		ofp->ofp_tx_bytes = ntohq(ofpps->tx_bytes);
+		ofp->ofp_rx_dropped = ntohq(ofpps->rx_dropped);
+		ofp->ofp_tx_dropped = ntohq(ofpps->tx_dropped);
+		ofp->ofp_rx_errors = ntohq(ofpps->rx_errors);
+		ofp->ofp_tx_errors = ntohq(ofpps->tx_errors);
+		ofp->ofp_rx_frame_err = ntohq(ofpps->rx_frame_err);
+		ofp->ofp_rx_over_err = ntohq(ofpps->rx_over_err);
+		ofp->ofp_rx_crc_err = ntohq(ofpps->rx_crc_err);
+		ofp->ofp_collisions = ntohq(ofpps->collisions);
+	}
 }
 
