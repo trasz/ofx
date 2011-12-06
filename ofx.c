@@ -70,6 +70,17 @@ connect_to(const char *ip, int port)
 }
 
 static int
+invalid_ip(const char *ip)
+{
+	struct sockaddr_in sin;
+
+	if (inet_pton(AF_INET, ip, &sin.sin_addr) != 1)
+		return (1);
+
+	return (0);
+}
+
+static int
 fd_add(int fd, fd_set *fdset, int nfds)
 {
 	FD_SET(fd, fdset);
@@ -99,7 +110,7 @@ main(int argc, char **argv)
 		usage();
 
 	controller_ip = argv[1];
-	if (inet_addr(controller_ip) == INADDR_NONE)
+	if (invalid_ip(controller_ip))
 		errx(1, "invalid ip address");
 	if (argc == 3) {
 		controller_port = atoi(argv[2]);
