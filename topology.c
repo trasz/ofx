@@ -17,7 +17,7 @@ struct topology_packet {
 	struct packet			*tp_p;
 };
 
-static TAILQ_HEAD(, topology_packet)		topology_packets;
+static TAILQ_HEAD(, topology_packet)	topology_packets = TAILQ_HEAD_INITIALIZER(topology_packets);
 
 static struct topology_packet *
 tp_alloc(void)

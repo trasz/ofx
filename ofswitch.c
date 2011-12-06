@@ -5,7 +5,7 @@
 #include "ofport.h"
 #include "ofswitch.h"
 
-struct ofswitches ofswitches;
+struct ofswitches ofswitches = TAILQ_HEAD_INITIALIZER(ofswitches);
 static int ofswitch_last_number;
 
 void
@@ -22,6 +22,7 @@ ofs_add(int switch_fd, int controller_fd)
 	ofs->ofs_number = ofswitch_last_number;
 	ofswitch_last_number++;
 
+	TAILQ_INIT(&ofs->ofs_ports);
 	TAILQ_INSERT_TAIL(&ofswitches, ofs, ofs_next);
 }
 

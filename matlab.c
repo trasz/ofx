@@ -11,13 +11,14 @@
 
 #include "array.h"
 #include "control.h"
+#include "debug.h"
 #include "matlab.h"
 #include "oflink.h"
 #include "ofport.h"
 #include "ofswitch.h"
 #include "packet.h"
 
-struct matlabs matlabs;
+struct matlabs matlabs = TAILQ_HEAD_INITIALIZER(matlabs);
 
 void
 matlab_add(int matlab_fd)
@@ -393,13 +394,17 @@ matlab_handle(struct matlab *matlab, int fd)
 	p = matlab->matlab_p;
 	p_read(p, fd, 1);
 	ch = p->p_payload[p->p_payload_len - 1];
-	if (ch != '\n' && ch != '\r')
+	if (ch != '\n' && ch != '\r') {
+		debug("char %c, line not finished", ch);
 		return;
+	}
 
 	/*
 	 * Wywalamy newline.
 	 */
 	p->p_payload[p->p_payload_len - 1] = '\0';
+
+	debug("got matlab command \"%s\"\n", p->p_payload);
 
 	cmd = p->p_payload;
 	arg1 = arg2 = NULL;

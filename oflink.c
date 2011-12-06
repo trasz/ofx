@@ -33,6 +33,7 @@ ofl_link(struct ofport *ofp1, struct ofport *ofp2)
 		ofl = calloc(sizeof(*ofl), 1);
 		if (ofl == NULL)
 			err(1, "calloc");
+		TAILQ_INIT(&ofl->ofl_ports);
 		ofp1->ofp_link = ofl;
 		TAILQ_INSERT_TAIL(&ofl->ofl_ports, ofp1, ofp_next_link);
 		ofp2->ofp_link = ofl;
