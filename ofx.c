@@ -31,7 +31,7 @@ listen_on(int port)
 		err(1, "socket");
 
 	sin.sin_family = AF_INET;
-	sin.sin_port = port;
+	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = INADDR_ANY;
 
 	error = bind(sock, (struct sockaddr *)&sin, sizeof(sin));
@@ -56,7 +56,7 @@ connect_to(const char *ip, int port)
 		err(1, "socket");
 
 	sin.sin_family = AF_INET;
-	sin.sin_port = port;
+	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = INADDR_ANY;
 
 	if (inet_pton(AF_INET, ip, &sin.sin_addr) != 1)
