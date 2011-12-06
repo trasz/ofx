@@ -394,20 +394,24 @@ matlab_handle(struct matlab *matlab, int fd)
 	p = matlab->matlab_p;
 	p_read(p, fd, 1);
 	ch = p->p_payload[p->p_payload_len - 1];
-	if (ch != '\n' && ch != '\r') {
-		debug("char %c, line not finished", ch);
+	if (ch != '\n' && ch != '\r')
 		return;
-	}
 
 	/*
 	 * Wywalamy newline.
 	 */
 	p->p_payload[p->p_payload_len - 1] = '\0';
 
-	debug("got matlab command \"%s\"\n", p->p_payload);
-
 	cmd = p->p_payload;
 	arg1 = arg2 = NULL;
+
+	if (strlen(cmd) == 0) {
+		p_free(matlab->matlab_p);
+		matlab->matlab_p = NULL;
+		return;
+	}
+
+	debug("got matlab command \"%s\"\n", cmd);
 
 	/*
 	 * Zmieniamy pierwszą spację na zero.

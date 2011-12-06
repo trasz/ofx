@@ -136,6 +136,8 @@ main(int argc, char **argv)
 			nfds = fd_add(ofs->ofs_switch_fd, &fdset, nfds);
 			nfds = fd_add(ofs->ofs_controller_fd, &fdset, nfds);
 		}
+		TAILQ_FOREACH(matlab, &matlabs, matlab_next)
+			nfds = fd_add(matlab->matlab_fd, &fdset, nfds);
 		error = select(nfds + 1, &fdset, NULL, NULL, NULL);
 		if (error <= 0)
 			err(1, "select");
@@ -162,24 +164,26 @@ main(int argc, char **argv)
 			continue;
 		}
 
-		for (i = 0; i < nfds; i++) {
+		for (i = 0; i < nfds + 1; i++) {
 			if (!FD_ISSET(i, &fdset))
 				continue;
 
 			ofs = ofs_find_by_fd(i);
 			if (ofs != NULL) {
+//				debug("fd %d: ofproto_handle()", i);
 				ofproto_handle(ofs, i);
-				continue;
+				break;
 			}
 
 			matlab = matlab_find_by_fd(i);
 			if (matlab != NULL) {
+//				debug("fd %d: matlab_handle()", i);
 				matlab_handle(matlab, i);
-				continue;
+				break;
 			}
-			errx(1, "unknown fd");
+			errx(1, "unknown fd %d", i);
 		}
-		if (i == nfds)
+		if (i == nfds + 1)
 			errx(1, "fd not found");
 	}
 
