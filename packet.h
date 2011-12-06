@@ -15,6 +15,5 @@ char		*p_extend(struct packet *p, size_t diff);
 char		*p_read(struct packet *p, int fd, size_t len);
 char		*p_peek(struct packet *p, int fd, size_t len);
 void		p_write(struct packet *p, int fd);
-void		p_dump(struct packet *p);
 
 #endif /* !PACKET_H */

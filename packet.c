@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <vis.h>
 
 #include "packet.h"
 
@@ -58,7 +57,6 @@ p_read(struct packet *p, int fd, size_t len)
 {
 	char *buf;
 	ssize_t received;
-	size_t done = 0;
 
 	/*
 	 * XXX: Przydałby się mechanizm, żeby czytać tyle, ile jest w sockecie,
@@ -66,18 +64,9 @@ p_read(struct packet *p, int fd, size_t len)
 	 */
 
 	buf = p_extend(p, len);
-	for (;;) {
-		received = read(fd, buf + done, len - done);
-		if (received <= 0)
-			err(1, "read");
-
-		done += received;
-		if (done == len)
-			break;
-
-		if (done > len)
-			errx(1, "logic error");
-	}
+	received = read(fd, buf, len);
+	if (received != len)
+		err(1, "read from fd %d", fd);
 
 	return (buf);
 }
@@ -96,7 +85,7 @@ p_peek(struct packet *p, int fd, size_t len)
 	buf = p_extend(p, len);
 	received = recv(fd, buf, len, MSG_PEEK);
 	if (received < 0 && errno != EAGAIN)
-		err(1, "peek");
+		err(1, "peek from fd %d", fd);
 
 	/*
 	 * Undo part of p_extend().
@@ -116,19 +105,6 @@ p_write(struct packet *p, int fd)
 
 	ret = send(fd, p->p_payload, p->p_payload_len, 0);
 	if (ret < 0 || (size_t)ret != p->p_payload_len)
-		err(1, "send");
+		err(1, "send to fd %d", fd);
 }
 
-void
-p_dump(struct packet *p)
-{
-	char *buf;
-
-	buf = malloc(p->p_payload_len * 4 + 1);
-	if (buf == NULL)
-		err(1, "malloc");
-
-	strvisx(buf, (char *)p->p_payload, p->p_payload_len, VIS_OCTAL);
-	fprintf(stderr, "packet length %zd: \"%s\"", p->p_payload_len, buf);
-	free(buf);
-}
