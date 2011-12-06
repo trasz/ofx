@@ -19,7 +19,7 @@
 #ifndef OPENFLOW_OPENFLOW_H
 #define OPENFLOW_OPENFLOW_H 1
 
-#include <sys/types.h>
+#include <stdint.h>
 
 /* Build-time assertion for use in a declaration context. */
 #define OFP_ASSERT(EXPR)                                                \

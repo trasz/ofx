@@ -1,8 +1,8 @@
 #ifndef  OFPORT_H
 #define	OFPORT_H
 
-#include <sys/types.h>
 #include <sys/queue.h>
+#include <stdint.h>
 
 #include "openflow.h"
 

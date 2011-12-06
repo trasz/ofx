@@ -1,6 +1,8 @@
 #ifndef CONTROL_H
 #define	CONTROL_H
 
+#include <stdint.h>
+
 struct ofport;
 
 void	control_port_up(struct ofport *ofp);
