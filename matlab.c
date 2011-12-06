@@ -351,7 +351,7 @@ static void
 matlab_help(struct matlab *matlab, const char *arg1, const char *arg2)
 {
 
-	matlab_print(matlab, "Available commands: switches, topology, status, stats, poll, help.\n");
+	matlab_print(matlab, "Available commands: switches, topology, status, stats, port-up, port-down, poll, help.\n");
 }
 
 static void
