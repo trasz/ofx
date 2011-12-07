@@ -104,6 +104,26 @@ monitoring_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
 	ofp->ofp_advertised = ntohl(ofppm->advertise);
 }
 
+void
+monitoring_stats_request(struct ofport *ofp)
+{
+	struct packet *p;
+	struct ofp_stats_msg *ofpsm;
+
+	p = p_alloc();
+	ofpsm = (struct ofp_stats_msg *)p_extend(p, sizeof(*ofpsm));
+	ofpsm->header.version = OFP_VERSION;
+	ofpsm->header.type = OFPT_STATS_REQUEST;
+	ofpsm->header.length = htons(p->p_payload_len);
+	ofpsm->header.xid = 0; /* XXX */
+
+	ofpsm->type = htons(OFPST_PORT);
+	ofpsm->flags = htons(0);
+
+	p_write(p, ofp->ofp_switch->ofs_switch_fd);
+	p_free(p);
+}
+
 /*
  * Tej struktury z jakiegoś powodu nie ma w specifykacji.
  */
