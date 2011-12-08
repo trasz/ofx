@@ -1,3 +1,4 @@
+#define _GNU_SOURCE /* For asprintf(3) under Linux. */
 #include <sys/endian.h>
 #include <netinet/in.h>
 #include <err.h>

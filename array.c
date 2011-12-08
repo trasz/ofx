@@ -1,3 +1,4 @@
+#define _GNU_SOURCE /* For asprintf(3) under Linux. */
 #include <assert.h>
 #include <err.h>
 #include <stdio.h>
