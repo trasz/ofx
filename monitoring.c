@@ -44,6 +44,8 @@ mon_handle_features_reply(struct ofswitch *ofs, const struct packet *p)
 	if (p->p_payload_len < sizeof(*ofpsf))
 		errx(1, "invalid FEATURES_REPLY message size: got %zd, should be at least %zd", p->p_payload_len, sizeof(*ofpsf));
 
+	ofpsf = (const struct ofp_switch_features *)p->p_payload;
+
 	nports = (p->p_payload_len - sizeof(*ofpsf)) / sizeof(struct ofp_phy_port);
 	expected_len = sizeof(*ofpsf) + nports * sizeof(struct ofp_phy_port);
 	if (p->p_payload_len != expected_len)
@@ -70,6 +72,7 @@ mon_handle_port_status(struct ofswitch *ofs, const struct packet *p)
 		errx(1, "invalid PORT_STATUS message size: got %zd, should be %zd", p->p_payload_len, sizeof(*ofpps));
 
 	ofpps = (const struct ofp_port_status *)p->p_payload;
+
 	ofp = mon_parse_ofp_phy_port(&(ofpps->desc));
 	switch (ofpps->reason) {
 	case OFPPR_ADD:
@@ -97,6 +100,8 @@ mon_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
 
 	if (p->p_payload_len != sizeof(*ofppm))
 		errx(1, "invalid PORT_MOD message size: got %zd, should be %zd", p->p_payload_len, sizeof(*ofppm));
+
+	ofppm = (const struct ofp_port_mod *)p->p_payload;
 
 	ofp = ofp_find_by_number(ofs, ntohs(ofppm->port_no));
 	if (ofp == NULL)

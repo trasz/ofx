@@ -42,8 +42,9 @@ topology_handle_packet_in(struct ofswitch *ofs, const struct packet *p)
 	struct ofport *ofp;
 
 	if (p->p_payload_len < sizeof(*ofppi))
-		errx(1, "invalid PACKET_IN message size: got %zd, should be at least %ld", p->p_payload_len, sizeof(*ofppi));
+		errx(1, "invalid PACKET_IN message size: got %zd, should be at least %zd", p->p_payload_len, sizeof(*ofppi));
 
+	ofppi = (const struct ofp_packet_in *)p->p_payload;
 	frame_len = p->p_payload_len - sizeof(*ofppi);
 
 	TAILQ_FOREACH(tp, &topology_packets, tp_next) {
@@ -72,7 +73,9 @@ topology_handle_packet_out(struct ofswitch *ofs, const struct packet *p)
 	int frame_len;
 
 	if (p->p_payload_len < sizeof(*ofppo))
-		errx(1, "invalid PACKET_IN message size: got %zd, should be at least %ld", p->p_payload_len, sizeof(*ofppo));
+		errx(1, "invalid PACKET_IN message size: got %zd, should be at least %zd", p->p_payload_len, sizeof(*ofppo));
+
+	ofppo = (const struct ofp_packet_out *)p->p_payload;
 
 	/*
 	 * XXX: Zamiast przechowywać i porównywać cały pakiet moglibyśmy liczyć sumę.
