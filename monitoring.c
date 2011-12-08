@@ -13,7 +13,7 @@
 #define	ntohq(x)	be64toh(x);
 
 static struct ofport *
-monitoring_parse_ofp_phy_port(const struct ofp_phy_port *ofppp)
+mon_parse_ofp_phy_port(const struct ofp_phy_port *ofppp)
 {
 	struct ofport *ofp;
 
@@ -32,7 +32,7 @@ monitoring_parse_ofp_phy_port(const struct ofp_phy_port *ofppp)
 }
 
 void
-monitoring_handle_features_reply(struct ofswitch *ofs, const struct packet *p)
+mon_handle_features_reply(struct ofswitch *ofs, const struct packet *p)
 {
 	const struct ofp_switch_features *ofpsf;
 	const struct ofp_phy_port *ofppp;
@@ -48,18 +48,19 @@ monitoring_handle_features_reply(struct ofswitch *ofs, const struct packet *p)
 	if (p->p_payload_len != expected_len)
 		errx(1, "invalid FEATURES_REPLY message size: got %zd, for %d ports should be %zd", p->p_payload_len, nports, expected_len);
 
+	ofs->ofs_datapath_id = ntohq(ofpsf->datapath_id);
 	ofs->ofs_nports = nports;
 	debug("controller %d: %d ports", ofs->ofs_number, ofs->ofs_nports);
 
 	for (i = 0; i < nports; i++) {
 		ofppp = (const struct ofp_phy_port *)&(ofpsf->ports[i]);
-		ofp = monitoring_parse_ofp_phy_port(ofppp);
+		ofp = mon_parse_ofp_phy_port(ofppp);
 		ofs_add_port(ofs, ofp);
 	}
 }
 
 void
-monitoring_handle_port_status(struct ofswitch *ofs, const struct packet *p)
+mon_handle_port_status(struct ofswitch *ofs, const struct packet *p)
 {
 	const struct ofp_port_status *ofpps;
 	struct ofport *ofp;
@@ -68,7 +69,7 @@ monitoring_handle_port_status(struct ofswitch *ofs, const struct packet *p)
 		errx(1, "invalid PORT_STATUS message size: got %zd, should be %ld", p->p_payload_len, sizeof(*ofpps));
 
 	ofpps = (const struct ofp_port_status *)p->p_payload;
-	ofp = monitoring_parse_ofp_phy_port(&(ofpps->desc));
+	ofp = mon_parse_ofp_phy_port(&(ofpps->desc));
 	switch (ofpps->reason) {
 	case OFPPR_ADD:
 		debug("switch %d: port added\n", ofs->ofs_number);
@@ -88,7 +89,7 @@ monitoring_handle_port_status(struct ofswitch *ofs, const struct packet *p)
 }
 
 void
-monitoring_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
+mon_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
 {
 	const struct ofp_port_mod *ofppm;
 	struct ofport *ofp;
@@ -105,7 +106,7 @@ monitoring_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
 }
 
 void
-monitoring_stats_request(struct ofport *ofp)
+mon_stats_request(struct ofport *ofp)
 {
 	struct packet *p;
 	struct ofp_stats_msg *ofpsm;
@@ -133,7 +134,7 @@ struct ofp_port_stats_reply {
 };
 
 void
-monitoring_handle_stats_reply(struct ofswitch *ofs, const struct packet *p)
+mon_handle_stats_reply(struct ofswitch *ofs, const struct packet *p)
 {
 	const struct ofp_port_stats_reply *ofppsr;
 	const struct ofp_port_stats *ofpps;

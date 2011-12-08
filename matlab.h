@@ -5,17 +5,17 @@
 
 struct packet;
 
-struct matlab {
-	TAILQ_ENTRY(matlab)	matlab_next;
-	int			matlab_fd;
-	struct packet		*matlab_p;
+struct mat {
+	TAILQ_ENTRY(mat)	mat_next;
+	int			mat_fd;
+	struct packet		*mat_p;
 };
 
-void	matlab_add(int matlab_fd);
-struct matlab	*matlab_find_by_fd(int fd);
-void	matlab_handle(struct matlab *matlab, int fd);
+void	mat_add(int mat_fd);
+struct mat	*mat_find_by_fd(int fd);
+void	mat_handle(struct mat *mat, int fd);
 
-TAILQ_HEAD(matlabs, matlab);
+TAILQ_HEAD(matlabs, mat);
 extern struct matlabs matlabs;
 
 #endif /* !MATLAB_H */

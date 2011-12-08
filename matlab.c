@@ -21,34 +21,34 @@
 struct matlabs matlabs = TAILQ_HEAD_INITIALIZER(matlabs);
 
 void
-matlab_add(int matlab_fd)
+mat_add(int mat_fd)
 {
-	struct matlab *matlab;
+	struct mat *mat;
 
-	matlab = calloc(sizeof(*matlab), 1);
-	if (matlab == NULL)
+	mat = calloc(sizeof(*mat), 1);
+	if (mat == NULL)
 		err(1, "calloc");
 
-	matlab->matlab_fd = matlab_fd;
+	mat->mat_fd = mat_fd;
 
-	TAILQ_INSERT_TAIL(&matlabs, matlab, matlab_next);
+	TAILQ_INSERT_TAIL(&matlabs, mat, mat_next);
 }
 
-struct matlab *
-matlab_find_by_fd(int fd)
+struct mat *
+mat_find_by_fd(int fd)
 {
-	struct matlab *matlab;
+	struct mat *mat;
 
-	TAILQ_FOREACH(matlab, &matlabs, matlab_next) {
-		if (fd == matlab->matlab_fd)
-			return (matlab);
+	TAILQ_FOREACH(mat, &matlabs, mat_next) {
+		if (fd == mat->mat_fd)
+			return (mat);
 	}
 
 	return (NULL);
 }
 
 static void
-matlab_print(struct matlab *matlab, const char *fmt, ...)
+mat_print(struct mat *mat, const char *fmt, ...)
 {
 	va_list ap;
 	char *str;
@@ -61,29 +61,29 @@ matlab_print(struct matlab *matlab, const char *fmt, ...)
 		err(1, "vasprintf");
 
 
-	write(matlab->matlab_fd, str, strlen(str));
+	write(mat->mat_fd, str, strlen(str));
 	free(str);
 }
 
 static int
-matlab_atoi(struct matlab *matlab, const char *arg, const char *desc)
+mat_atoi(struct mat *mat, const char *arg, const char *desc)
 {
 	int n;
 	char *end;
 
 	if (arg == NULL) {
-		matlab_print(matlab, "Missing %s.\n", desc);
+		mat_print(mat, "Missing %s.\n", desc);
 		return (-1);
 	}
 
 	n = strtol(arg, &end, 10);
 	if (end[0] != '\0') {
-		matlab_print(matlab, "\"%s\" is not a valid %s.\n", arg, desc);
+		mat_print(mat, "\"%s\" is not a valid %s.\n", arg, desc);
 		return (-1);
 	}
 
 	if (n < 0) {
-		matlab_print(matlab, "The %s must be greater than zero.\n",  desc);
+		mat_print(mat, "The %s must be greater than zero.\n",  desc);
 		return (-1);
 	}
 
@@ -91,7 +91,7 @@ matlab_atoi(struct matlab *matlab, const char *arg, const char *desc)
 }
 
 static void
-matlab_switches(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_switches(struct mat *mat, const char *arg1, const char *arg2)
 {
 	struct array *a;
 	struct ofswitch *ofs;
@@ -100,15 +100,16 @@ matlab_switches(struct matlab *matlab, const char *arg1, const char *arg2)
 	a = a_alloc();
 	TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
 		a_add_int(a, ofs->ofs_number);
+		a_add_int(a, ofs->ofs_datapath_id);
 	}
 	str = a_str(a);
 	a_free(a);
-	matlab_print(matlab, str);
+	mat_print(mat, str);
 	free(str);
 }
 
 static void
-matlab_topology_one(struct matlab *matlab, struct ofport *ofp)
+mat_topology_one(struct mat *mat, struct ofport *ofp)
 {
 	struct array *a;
 	struct ofport *ofp2;
@@ -119,55 +120,55 @@ matlab_topology_one(struct matlab *matlab, struct ofport *ofp)
 		a_add_int(a, ofp->ofp_number);
 		a_add_int(a, ofp2->ofp_switch->ofs_number);
 		a_add_int(a, ofp2->ofp_number);
-		matlab_print(matlab, a_str(a));
+		mat_print(mat, a_str(a));
 		a_free(a);
 	}
 }
 
 static void
-matlab_topology(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_topology(struct mat *mat, const char *arg1, const char *arg2)
 {
 	struct ofswitch *ofs;
 	struct ofport *ofp;
 	int switch_no, port_no;
 
 	if (arg1 != NULL) {
-		switch_no = matlab_atoi(matlab, arg1, "switch number");
+		switch_no = mat_atoi(mat, arg1, "switch number");
 		if (switch_no < 0)
 			return;
 
 		ofs = ofs_find_by_number(switch_no);
 		if (ofs == NULL) {
-			matlab_print(matlab, "Invalid switch number.\n");
+			mat_print(mat, "Invalid switch number.\n");
 			return;
 		}
 
 		if (arg2 != NULL) {
-			port_no = matlab_atoi(matlab, arg1, "port number");
+			port_no = mat_atoi(mat, arg1, "port number");
 			if (port_no < 0)
 				return;
 
 			ofp = ofp_find_by_number(ofs, port_no);
 			if (ofp == NULL) {
-				matlab_print(matlab, "Invalid port number.\n");
+				mat_print(mat, "Invalid port number.\n");
 				return;
 			}
 
-			matlab_topology_one(matlab, ofp);
+			mat_topology_one(mat, ofp);
 		} else {
 			TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next)
-				matlab_topology_one(matlab, ofp);
+				mat_topology_one(mat, ofp);
 		}
 	} else {
 		TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
 			TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next)
-				matlab_topology_one(matlab, ofp);
+				mat_topology_one(mat, ofp);
 		}
 	}
 }
 
 static void
-matlab_status_one(struct matlab *matlab, struct ofport *ofp)
+mat_status_one(struct mat *mat, struct ofport *ofp)
 {
 	struct array *a;
 
@@ -180,54 +181,54 @@ matlab_status_one(struct matlab *matlab, struct ofport *ofp)
 	a_add_int(a, ofp->ofp_advertised);
 	a_add_int(a, ofp->ofp_supported);
 	a_add_int(a, ofp->ofp_peer);
-	matlab_print(matlab, a_str(a));
+	mat_print(mat, a_str(a));
 	a_free(a);
 }
 
 static void
-matlab_status(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_status(struct mat *mat, const char *arg1, const char *arg2)
 {
 	struct ofswitch *ofs;
 	struct ofport *ofp;
 	int switch_no, port_no;
 
 	if (arg1 != NULL) {
-		switch_no = matlab_atoi(matlab, arg1, "switch number");
+		switch_no = mat_atoi(mat, arg1, "switch number");
 		if (switch_no < 0)
 			return;
 
 		ofs = ofs_find_by_number(switch_no);
 		if (ofs == NULL) {
-			matlab_print(matlab, "Invalid switch number.\n");
+			mat_print(mat, "Invalid switch number.\n");
 			return;
 		}
 
 		if (arg2 != NULL) {
-			port_no = matlab_atoi(matlab, arg1, "port number");
+			port_no = mat_atoi(mat, arg1, "port number");
 			if (port_no < 0)
 				return;
 
 			ofp = ofp_find_by_number(ofs, port_no);
 			if (ofp == NULL) {
-				matlab_print(matlab, "Invalid port number.\n");
+				mat_print(mat, "Invalid port number.\n");
 				return;
 			}
 
-			matlab_status_one(matlab, ofp);
+			mat_status_one(mat, ofp);
 		} else {
 			TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next)
-				matlab_status_one(matlab, ofp);
+				mat_status_one(mat, ofp);
 		}
 	} else {
 		TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
 			TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next)
-				matlab_status_one(matlab, ofp);
+				mat_status_one(mat, ofp);
 		}
 	}
 }
 
 static void
-matlab_stats_one(struct matlab *matlab, struct ofport *ofp)
+mat_stats_one(struct mat *mat, struct ofport *ofp)
 {
 	struct array *a;
 
@@ -246,142 +247,142 @@ matlab_stats_one(struct matlab *matlab, struct ofport *ofp)
 	a_add_int(a, ofp->ofp_rx_over_err);
 	a_add_int(a, ofp->ofp_rx_crc_err);
 	a_add_int(a, ofp->ofp_collisions);
-	matlab_print(matlab, a_str(a));
+	mat_print(mat, a_str(a));
 	a_free(a);
 }
 
 static void
-matlab_stats(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_stats(struct mat *mat, const char *arg1, const char *arg2)
 {
 	struct ofswitch *ofs;
 	struct ofport *ofp;
 	int switch_no, port_no;
 
 	if (arg1 != NULL) {
-		switch_no = matlab_atoi(matlab, arg1, "switch number");
+		switch_no = mat_atoi(mat, arg1, "switch number");
 		if (switch_no < 0)
 			return;
 
 		ofs = ofs_find_by_number(switch_no);
 		if (ofs == NULL) {
-			matlab_print(matlab, "Invalid switch number.\n");
+			mat_print(mat, "Invalid switch number.\n");
 			return;
 		}
 
 		if (arg2 != NULL) {
-			port_no = matlab_atoi(matlab, arg1, "port number");
+			port_no = mat_atoi(mat, arg1, "port number");
 			if (port_no < 0)
 				return;
 
 			ofp = ofp_find_by_number(ofs, port_no);
 			if (ofp == NULL) {
-				matlab_print(matlab, "Invalid port number.\n");
+				mat_print(mat, "Invalid port number.\n");
 				return;
 			}
 
-			matlab_stats_one(matlab, ofp);
+			mat_stats_one(mat, ofp);
 		} else {
 			TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next)
-				matlab_stats_one(matlab, ofp);
+				mat_stats_one(mat, ofp);
 		}
 	} else {
 		TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
 			TAILQ_FOREACH(ofp, &ofs->ofs_ports, ofp_next)
-				matlab_stats_one(matlab, ofp);
+				mat_stats_one(mat, ofp);
 		}
 	}
 }
 
 static void
-matlab_port_up(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_port_up(struct mat *mat, const char *arg1, const char *arg2)
 {
 	int switch_no, port_no;
 	struct ofswitch *ofs;
 	struct ofport *ofp;
 
-	switch_no = matlab_atoi(matlab, arg1, "switch number");
-	port_no = matlab_atoi(matlab, arg2, "port number");
+	switch_no = mat_atoi(mat, arg1, "switch number");
+	port_no = mat_atoi(mat, arg2, "port number");
 	if (switch_no < 0 || port_no < 0)
 		return;
 
 	ofs = ofs_find_by_number(switch_no);
 	if (ofs == NULL) {
-		matlab_print(matlab, "Invalid switch number.\n");
+		mat_print(mat, "Invalid switch number.\n");
 		return;
 	}
 	ofp = ofp_find_by_number(ofs, port_no);
 	if (ofp == NULL) {
-		matlab_print(matlab, "Invalid port number.\n");
+		mat_print(mat, "Invalid port number.\n");
 		return;
 	}
 	control_port_up(ofp);
 }
 
 static void
-matlab_port_down(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_port_down(struct mat *mat, const char *arg1, const char *arg2)
 {
 	int switch_no, port_no;
 	struct ofswitch *ofs;
 	struct ofport *ofp;
 
-	switch_no = matlab_atoi(matlab, arg1, "switch number");
-	port_no = matlab_atoi(matlab, arg2, "port number");
+	switch_no = mat_atoi(mat, arg1, "switch number");
+	port_no = mat_atoi(mat, arg2, "port number");
 	if (switch_no < 0 || port_no < 0)
 		return;
 
 	ofs = ofs_find_by_number(switch_no);
 	if (ofs == NULL) {
-		matlab_print(matlab, "Invalid switch number.\n");
+		mat_print(mat, "Invalid switch number.\n");
 		return;
 	}
 	ofp = ofp_find_by_number(ofs, port_no);
 	if (ofp == NULL) {
-		matlab_print(matlab, "Invalid port number.\n");
+		mat_print(mat, "Invalid port number.\n");
 		return;
 	}
 	control_port_down(ofp);
 }
 
 static void
-matlab_poll(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_poll(struct mat *mat, const char *arg1, const char *arg2)
 {
 }
 
 static void
-matlab_help(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_help(struct mat *mat, const char *arg1, const char *arg2)
 {
 
-	matlab_print(matlab, "Available commands: switches, topology, status, stats, port-up, port-down, poll, help.\n");
+	mat_print(mat, "Available commands: switches, topology, status, stats, port-up, port-down, poll, help.\n");
 }
 
 static void
-matlab_unrecognized(struct matlab *matlab, const char *arg1, const char *arg2)
+mat_unrecognized(struct mat *mat, const char *arg1, const char *arg2)
 {
 
-	matlab_print(matlab, "Unrecognized command; try 'help'.\n");
+	mat_print(mat, "Unrecognized command; try 'help'.\n");
 }
 
-struct matlab_cmd {
+struct mat_cmd {
 	const char	*mc_name;
-	void		(*mc_f)(struct matlab *, const char *arg1, const char *arg2);
+	void		(*mc_f)(struct mat *, const char *arg1, const char *arg2);
 };
 
-static const struct matlab_cmd matlab_cmds[] = {
-	{ "switches", matlab_switches },
-	{ "topology", matlab_topology },
-	{ "status", matlab_status },
-	{ "stats", matlab_stats },
-	{ "port-up", matlab_port_up },
-	{ "port-down", matlab_port_down },
-	{ "poll", matlab_poll },
-	{ "help", matlab_help },
+static const struct mat_cmd mat_cmds[] = {
+	{ "switches", mat_switches },
+	{ "topology", mat_topology },
+	{ "status", mat_status },
+	{ "stats", mat_stats },
+	{ "port-up", mat_port_up },
+	{ "port-down", mat_port_down },
+	{ "poll", mat_poll },
+	{ "help", mat_help },
 	{ NULL, NULL}};
 
 void
-matlab_handle(struct matlab *matlab, int fd)
+mat_handle(struct mat *mat, int fd)
 {
 	struct packet *p;
-	const struct matlab_cmd *mc;
+	const struct mat_cmd *mc;
 	int i;
 	char ch;
 	char *cmd, *arg1, *arg2;
@@ -389,9 +390,9 @@ matlab_handle(struct matlab *matlab, int fd)
 	/*
 	 * Gromadzimy kolejne znaki do momentu odebrania '\n'.
 	 */
-	if (matlab->matlab_p == NULL)
-		matlab->matlab_p = p_alloc();
-	p = matlab->matlab_p;
+	if (mat->mat_p == NULL)
+		mat->mat_p = p_alloc();
+	p = mat->mat_p;
 	p_read(p, fd, 1);
 	ch = p->p_payload[p->p_payload_len - 1];
 	if (ch != '\n' && ch != '\r')
@@ -406,12 +407,12 @@ matlab_handle(struct matlab *matlab, int fd)
 	arg1 = arg2 = NULL;
 
 	if (strlen(cmd) == 0) {
-		p_free(matlab->matlab_p);
-		matlab->matlab_p = NULL;
+		p_free(mat->mat_p);
+		mat->mat_p = NULL;
 		return;
 	}
 
-	debug("got matlab command \"%s\"\n", cmd);
+	debug("got mat command \"%s\"\n", cmd);
 
 	/*
 	 * Zmieniamy pierwszą spację na zero.
@@ -424,16 +425,16 @@ matlab_handle(struct matlab *matlab, int fd)
 		}
 	}
 
-	for (mc = matlab_cmds; mc->mc_name != NULL; mc++) {
+	for (mc = mat_cmds; mc->mc_name != NULL; mc++) {
 		if (strcasecmp(mc->mc_name, cmd) != 0)
 			continue;
-		mc->mc_f(matlab, arg1, arg2);
+		mc->mc_f(mat, arg1, arg2);
 		break;
 	}
 
 	if (mc->mc_name == NULL)
-		matlab_unrecognized(matlab, arg1, arg2);
+		mat_unrecognized(mat, arg1, arg2);
 
-	p_free(matlab->matlab_p);
-	matlab->matlab_p = NULL;
+	p_free(mat->mat_p);
+	mat->mat_p = NULL;
 }

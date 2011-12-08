@@ -11,6 +11,7 @@ struct ofswitch {
 	int			ofs_switch_fd;
 	int			ofs_controller_fd;
 	int			ofs_number;
+	uint64_t		ofs_datapath_id;
 	int			ofs_nports;
 	TAILQ_HEAD(, ofport)	ofs_ports;
 };

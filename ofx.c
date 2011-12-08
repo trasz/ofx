@@ -18,7 +18,7 @@
 #define	OFP_PORT	6633
 #define	MATLAB_PORT	3366
 
-static int ofp_listening_socket, matlab_listening_socket;
+static int ofp_listening_socket, mat_listening_socket;
 
 static int
 listen_on(int port)
@@ -101,10 +101,10 @@ int
 main(int argc, char **argv)
 {
 	fd_set fdset;
-	int error, i, nfds, switch_fd, controller_fd, matlab_fd, controller_port;
+	int error, i, nfds, switch_fd, controller_fd, mat_fd, controller_port;
 	const char *controller_ip;
 	struct ofswitch *ofs;
-	struct matlab *matlab;
+	struct mat *mat;
 
 	if (argc < 2 || argc > 3)
 		usage();
@@ -120,7 +120,7 @@ main(int argc, char **argv)
 		controller_port = OFP_PORT;
 
 	ofp_listening_socket = listen_on(OFP_PORT);
-	matlab_listening_socket = listen_on(MATLAB_PORT);
+	mat_listening_socket = listen_on(MATLAB_PORT);
 
 	debug("listening for switches on port %d; "
 	    "connecting to controller at %s:%d\n",
@@ -131,13 +131,13 @@ main(int argc, char **argv)
 		FD_ZERO(&fdset);
 		nfds = 0;
 		nfds = fd_add(ofp_listening_socket, &fdset, nfds);
-		nfds = fd_add(matlab_listening_socket, &fdset, nfds);
+		nfds = fd_add(mat_listening_socket, &fdset, nfds);
 		TAILQ_FOREACH(ofs, &ofswitches, ofs_next) {
 			nfds = fd_add(ofs->ofs_switch_fd, &fdset, nfds);
 			nfds = fd_add(ofs->ofs_controller_fd, &fdset, nfds);
 		}
-		TAILQ_FOREACH(matlab, &matlabs, matlab_next)
-			nfds = fd_add(matlab->matlab_fd, &fdset, nfds);
+		TAILQ_FOREACH(mat, &matlabs, mat_next)
+			nfds = fd_add(mat->mat_fd, &fdset, nfds);
 		error = select(nfds + 1, &fdset, NULL, NULL, NULL);
 		if (error <= 0)
 			err(1, "select");
@@ -155,12 +155,12 @@ main(int argc, char **argv)
 			continue;
 		}
 
-		if (FD_ISSET(matlab_listening_socket, &fdset)) {
-			matlab_fd = accept(matlab_listening_socket, NULL, 0);
-			debug("fd %d: got new MATLAB client\n", matlab_fd);
-			if (matlab_fd < 0)
+		if (FD_ISSET(mat_listening_socket, &fdset)) {
+			mat_fd = accept(mat_listening_socket, NULL, 0);
+			debug("fd %d: got new MATLAB client\n", mat_fd);
+			if (mat_fd < 0)
 				err(1, "accept");
-			matlab_add(matlab_fd);
+			mat_add(mat_fd);
 			continue;
 		}
 
@@ -175,10 +175,10 @@ main(int argc, char **argv)
 				break;
 			}
 
-			matlab = matlab_find_by_fd(i);
-			if (matlab != NULL) {
-//				debug("fd %d: matlab_handle()", i);
-				matlab_handle(matlab, i);
+			mat = mat_find_by_fd(i);
+			if (mat != NULL) {
+//				debug("fd %d: mat_handle()", i);
+				mat_handle(mat, i);
 				break;
 			}
 			errx(1, "unknown fd %d", i);

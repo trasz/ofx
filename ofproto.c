@@ -75,16 +75,16 @@ ofproto_handle(struct ofswitch *ofs, int fd)
 
 	switch (ofph->type) {
 	case OFPT_FEATURES_REPLY:
-		monitoring_handle_features_reply(ofs, p);
+		mon_handle_features_reply(ofs, p);
 		break;
 	case OFPT_PORT_STATUS:
-		monitoring_handle_port_status(ofs, p);
+		mon_handle_port_status(ofs, p);
 		break;
 	case OFPT_PORT_MOD:
-		monitoring_handle_port_mod(ofs, p);
+		mon_handle_port_mod(ofs, p);
 		break;
 	case OFPT_STATS_REPLY:
-		monitoring_handle_stats_reply(ofs, p);
+		mon_handle_stats_reply(ofs, p);
 		break;
 	case OFPT_PACKET_IN:
 		topology_handle_packet_in(ofs, p);
