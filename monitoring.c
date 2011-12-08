@@ -42,7 +42,7 @@ mon_handle_features_reply(struct ofswitch *ofs, const struct packet *p)
 	struct ofport *ofp;
 
 	if (p->p_payload_len < sizeof(*ofpsf))
-		errx(1, "invalid FEATURES_REPLY message size: got %zd, should be at least %ld", p->p_payload_len, sizeof(*ofpsf));
+		errx(1, "invalid FEATURES_REPLY message size: got %zd, should be at least %zd", p->p_payload_len, sizeof(*ofpsf));
 
 	nports = (p->p_payload_len - sizeof(*ofpsf)) / sizeof(struct ofp_phy_port);
 	expected_len = sizeof(*ofpsf) + nports * sizeof(struct ofp_phy_port);
@@ -67,7 +67,7 @@ mon_handle_port_status(struct ofswitch *ofs, const struct packet *p)
 	struct ofport *ofp;
 
 	if (p->p_payload_len != sizeof(*ofpps))
-		errx(1, "invalid PORT_STATUS message size: got %zd, should be %ld", p->p_payload_len, sizeof(*ofpps));
+		errx(1, "invalid PORT_STATUS message size: got %zd, should be %zd", p->p_payload_len, sizeof(*ofpps));
 
 	ofpps = (const struct ofp_port_status *)p->p_payload;
 	ofp = mon_parse_ofp_phy_port(&(ofpps->desc));
@@ -96,7 +96,7 @@ mon_handle_port_mod(struct ofswitch *ofs, const struct packet *p)
 	struct ofport *ofp;
 
 	if (p->p_payload_len != sizeof(*ofppm))
-		errx(1, "invalid PORT_MOD message size: got %zd, should be %ld", p->p_payload_len, sizeof(*ofppm));
+		errx(1, "invalid PORT_MOD message size: got %zd, should be %zd", p->p_payload_len, sizeof(*ofppm));
 
 	ofp = ofp_find_by_number(ofs, ntohs(ofppm->port_no));
 	if (ofp == NULL)
@@ -144,7 +144,7 @@ mon_handle_stats_reply(struct ofswitch *ofs, const struct packet *p)
 	size_t expected_len;
 
 	if (p->p_payload_len < sizeof(*ofppsr))
-		errx(1, "invalid STATS_REPLY message size: got %zd, should be at least %ld", p->p_payload_len, sizeof(*ofppsr));
+		errx(1, "invalid STATS_REPLY message size: got %zd, should be at least %zd", p->p_payload_len, sizeof(*ofppsr));
 
 	ofppsr  = (const struct ofp_port_stats_reply *)p->p_payload;
 	if (ntohs(ofppsr->osm.type) != OFPST_PORT)
